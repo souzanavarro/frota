@@ -4,13 +4,15 @@ from repositories.veiculo_repository import listar_veiculos
 from repositories.manutencao_repository import listar_ultimas, buscar_por_id, atualizar_manutencao
 import datetime
 import pandas as pd
+from components.ui import cp_hero, cp_card, cp_card_end, cp_card_back, cp_card_back_end, cp_data_panel_start, cp_data_panel_end
 
 
 def render():
-    st.title('Manutenções')
+    cp_hero('Manutenções', 'Registre e edite manutenções', icon='🔧')
     veiculos = listar_veiculos()
 
     with st.expander('Registrar manutenção'):
+        cp_card()
         with st.form('form_manu'):
             veiculo_id = st.selectbox('Veículo', [v.id for v in veiculos], format_func=lambda x: next((vv.placa for vv in veiculos if vv.id==x), ''))
             tipo = st.selectbox('Tipo', ['preventiva','corretiva'])
@@ -36,6 +38,7 @@ def render():
                     st.success('Manutenção registrada')
                 except Exception as e:
                     st.error(f'Erro: {e}')
+        cp_card_end()
 
     st.subheader('Últimas manutenções')
     rows = ultimas_manutencoes(200)
@@ -48,7 +51,13 @@ def render():
             'oficina': r.oficina,
             'custo_total': (r.custo_pecas or 0) + (r.custo_mao_obra or 0)
     } for r in rows])
+    # Mostrar últimas manutenções com painel de dados sobre o card branco
+    cp_card_back()
+    # close background card before starting data panel
+    cp_card_back_end()
+    cp_data_panel_start()
     st.table(df)
+    cp_data_panel_end()
 
     # filtro por período e busca
     st.markdown('---')
@@ -57,6 +66,10 @@ def render():
     search = fcol1.text_input('Buscar por placa ou descrição')
     show_all = fcol2.checkbox('Mostrar todos', value=True)
 
+    cp_card_back()
+    # close background card before starting data panel
+    cp_card_back_end()
+    cp_data_panel_start()
     for r in rows:
         placa = r.veiculo.placa if r.veiculo else ''
         if not show_all and search:
@@ -70,6 +83,8 @@ def render():
         cols[2].write(r.tipo)
         cols[3].write(r.km)
         cols[4].write(r.data)
+    cp_data_panel_end()
+    cp_card_back_end()
 
     if 'edit_manutencao_id' in st.session_state and st.session_state.edit_manutencao_id:
         mid = st.session_state.edit_manutencao_id
@@ -77,6 +92,7 @@ def render():
         if m:
             st.markdown('---')
             st.subheader(f'Editar manutenção #{mid}')
+            cp_card()
             with st.form('edit_manu_form'):
                 veiculos = listar_veiculos()
                 veiculo_id = st.selectbox('Veículo', [v.id for v in veiculos], index=next((i for i,v in enumerate(veiculos) if v.id==m.veiculo_id), 0), format_func=lambda x: next((vv.placa for vv in veiculos if vv.id==x), ''))
@@ -101,3 +117,4 @@ def render():
                     atualizar_manutencao(mid, payload)
                     st.success('Manutenção atualizada')
                     del st.session_state['edit_manutencao_id']
+            cp_card_end()

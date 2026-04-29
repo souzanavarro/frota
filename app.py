@@ -4,6 +4,7 @@ import config.settings as settings
 import models
 from utils.auth import hash_password, verify_password
 from components.sidebar import render_sidebar
+from components.theme import apply_styles
 
 from pages import dashboard as dashboard_page_module
 from pages import veiculos as veiculos_page_module
@@ -14,6 +15,13 @@ from pages import manutencoes as manutencoes_page_module
 def configurar():
     init_db(models.Base)
     st.set_page_config(page_title=settings.PAGE_TITLE, layout='wide')
+    # aplicar tema global (usar preferência em sessão se existir)
+    try:
+        theme = st.session_state.get('theme', '🌞 Claro') if hasattr(st, 'session_state') else '🌞 Claro'
+        apply_styles(theme)
+    except Exception:
+        # não falhar o app se estilos não puderem ser aplicados
+        pass
 
 
 def login_flow():
@@ -34,7 +42,14 @@ def login_flow():
                 st.session_state.user = user.username
                 st.session_state.user_role = user.role
                 st.session_state.transportador_id = getattr(user, 'transportador_id', None)
-                st.experimental_rerun()
+                # rerun compatível com diferentes versões do Streamlit
+                if hasattr(st, 'experimental_rerun'):
+                    try:
+                        st.experimental_rerun()
+                    except Exception:
+                        st.stop()
+                else:
+                    st.stop()
             else:
                 st.error('Usuário ou senha inválidos')
         # registro público de transportador + usuário

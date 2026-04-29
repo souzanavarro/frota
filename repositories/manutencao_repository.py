@@ -1,5 +1,6 @@
 from config.database import SessionLocal
 from models import Manutencao
+from sqlalchemy.orm import joinedload
 
 def salvar_manutencao(obj: Manutencao):
     db = SessionLocal()
@@ -12,14 +13,15 @@ def salvar_manutencao(obj: Manutencao):
 def listar_ultimas(limit=20):
     db = SessionLocal()
     try:
-        return db.query(Manutencao).order_by(Manutencao.data.desc()).limit(limit).all()
+        # eager-load veiculo para evitar DetachedInstanceError ao acessar r.veiculo após fechar a sessão
+        return db.query(Manutencao).options(joinedload(Manutencao.veiculo)).order_by(Manutencao.data.desc()).limit(limit).all()
     finally:
         db.close()
 
 def buscar_por_id(manutencao_id):
     db = SessionLocal()
     try:
-        return db.query(Manutencao).filter(Manutencao.id==manutencao_id).first()
+        return db.query(Manutencao).options(joinedload(Manutencao.veiculo)).filter(Manutencao.id==manutencao_id).first()
     finally:
         db.close()
 

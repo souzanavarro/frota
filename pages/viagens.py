@@ -7,12 +7,14 @@ from repositories.motorista_repository import listar_motoristas
 from repositories.viagem_repository import listar_viagens, buscar_por_id, atualizar_viagem
 import pandas as pd
 import datetime
+from components.ui import cp_hero, cp_card, cp_card_end, cp_card_back, cp_card_back_end, cp_data_panel_start, cp_data_panel_end
 
 
 def render():
-    st.title('Viagens')
+    cp_hero('Viagens', 'Acompanhe e edite viagens', icon='🗺️')
     db = SessionLocal()
     with st.expander('Abrir viagem'):
+        cp_card()
         with st.form('form_v'):
             # carregar opções de veículos e motoristas
             veiculos = listar_veiculos()
@@ -43,6 +45,7 @@ def render():
                 db.add(v)
                 db.commit()
                 st.success('Viagem aberta')
+            cp_card_end()
     rows = db.query(Viagem).order_by(Viagem.data_saida.desc()).limit(500).all()
     # aplicar filtro: se transportador, mostrar apenas viagens do transportador
     if 'user' in st.session_state and st.session_state.user:
@@ -82,6 +85,11 @@ def render():
         filtered.append(r)
 
     st.subheader('Viagens')
+    # Background card with data panel overlay
+    cp_card_back()
+    # close the background card before starting the data panel
+    cp_card_back_end()
+    cp_data_panel_start()
     for r in filtered:
         cols = st.columns([1,2,2,2,1,1,1])
         if cols[0].button(str(r.id), key=f"edit_viagem_{r.id}"):
@@ -92,6 +100,8 @@ def render():
         cols[4].write(r.status)
         cols[5].write(getattr(r, 'valor_frete', ''))
         cols[6].write(r.data_saida)
+    cp_data_panel_end()
+    cp_card_back_end()
 
     # mostrar formulário de edição quando id clicado
     if 'edit_viagem_id' in st.session_state and st.session_state.edit_viagem_id:
@@ -100,6 +110,7 @@ def render():
         if vobj:
             st.markdown('---')
             st.subheader(f'Editar viagem #{vid}')
+            cp_card()
             with st.form('edit_viagem_form'):
                 veiculos = listar_veiculos()
                 motoristas = listar_motoristas()
@@ -121,6 +132,7 @@ def render():
                     atualizar_viagem(vid, payload)
                     st.success('Viagem atualizada')
                     del st.session_state['edit_viagem_id']
+            cp_card_end()
     
     st.markdown('---')
     st.subheader('Editar viagem')
@@ -131,6 +143,7 @@ def render():
         vid = int(sel.split(' - ')[0])
         vobj = buscar_por_id(vid)
         if vobj:
+            cp_card()
             with st.form('edit_viagem'):
                 veiculos = listar_veiculos()
                 motoristas = listar_motoristas()
@@ -151,4 +164,5 @@ def render():
                     }
                     atualizar_viagem(vid, payload)
                     st.success('Viagem atualizada')
+            cp_card_end()
     db.close()

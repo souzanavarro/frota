@@ -3,14 +3,16 @@ from repositories.veiculo_repository import listar_veiculos, criar_veiculo
 from repositories.motorista_repository import listar_motoristas
 from repositories.veiculo_repository import buscar_por_id, atualizar_veiculo
 import datetime
+from components.ui import cp_card, cp_card_end, cp_primary_button, cp_hero, cp_card_back, cp_card_back_end, cp_data_panel_start, cp_data_panel_end
 
 
 def render():
-    st.title('Veículos')
+    cp_hero('Veículos', 'Gerencie a frota e associe motoristas', icon='🚚')
 
     motoristas = listar_motoristas()
     motorista_options = ["--- Nenhum ---"] + [f"{m.id} - {m.nome}" for m in motoristas]
 
+    cp_card()
     with st.form('novo_veiculo'):
         placa = st.text_input('Placa')
         tipo = st.selectbox('Tipo de Veículo', ['Truck', 'Toco', '3/4', 'Van'])
@@ -36,6 +38,7 @@ def render():
                 st.success('Veículo criado com sucesso')
             except Exception as e:
                 st.error(f'Erro ao criar veículo: {e}')
+    cp_card_end()
 
     st.markdown('---')
     # filtros
@@ -59,6 +62,11 @@ def render():
         return False
 
     st.subheader('Veículos')
+    # Background card (visual white card behind)
+    cp_card_back()
+    # close background card before starting the data panel (panel should be a sibling)
+    cp_card_back_end()
+    cp_data_panel_start()
     for v in veiculos:
         if not show_all and not matches(v):
             continue
@@ -69,6 +77,7 @@ def render():
         cols[1].write(v.placa)
         cols[2].write(v.marca_modelo or '')
         cols[3].write(motorista_text)
+    cp_data_panel_end()
 
     # edição via id clicado
     if 'edit_veiculo_id' in st.session_state and st.session_state.edit_veiculo_id:
@@ -77,6 +86,7 @@ def render():
         if ve:
             st.markdown('---')
             st.subheader(f'Editar veículo #{vid}')
+            cp_card()
             with st.form('edit_veic_form'):
                 placa = st.text_input('Placa', value=ve.placa)
                 tipo = st.selectbox('Tipo de Veículo', ['Truck', 'Toco', '3/4', 'Van'], index=['Truck','Toco','3/4','Van'].index(ve.tipo) if ve.tipo in ['Truck','Toco','3/4','Van'] else 0)
