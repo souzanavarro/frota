@@ -1,0 +1,9 @@
+streamlit
+SQLAlchemy
+pandas
+plotly
+passlib[bcrypt]
+bcrypt
+pytest
+pytest-cov
+coverage
